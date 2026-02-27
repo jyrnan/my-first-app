@@ -1,0 +1,39 @@
+/* 给整个背景换个颜色，居中对齐 */
+#root {
+  background-color: #f0f4f8; /* 浅蓝色背景 */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 给标题加个酷炫的效果 */
+h1 {
+  color: #2d3436;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* 给按钮换个装 */
+button {
+  background-color: #0984e3;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s; /* 点击时的动画 */
+}
+
+button:hover {
+  background-color: #74b9ff;
+  transform: scale(1.1); /* 鼠标悬停时放大一点 */
+}
+
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
