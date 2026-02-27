@@ -1,11 +1,11 @@
 /* 给整个背景换个颜色，居中对齐 */
-#root {
-  background-color: #f0f4f8; /* 浅蓝色背景 */
+html, body, #root {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  background-color: #ffffff; /* 浅蓝色背景 */
 }
 
 /* 给标题加个酷炫的效果 */
