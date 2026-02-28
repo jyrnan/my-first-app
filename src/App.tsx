@@ -15,6 +15,11 @@ function SuperButton({ title, color }: { title: string, color: string }) {
 }
 
 function App() {
+  const buttonConfigs = [
+    { id: 'super', title: '超级按钮', color: 'purple' },
+    { id: 'another-1', title: '另一个按钮', color: 'green' },
+    { id: 'another-2', title: '另一个按钮', color: 'green' },
+  ]
 
   return (
     <div style={{
@@ -42,10 +47,9 @@ function App() {
         style={{ borderRadius: '50%', marginBottom: '20px', border: '4px solid #61dafb' }}
       />
       <div className="button-group">
-
-        <SuperButton title="超级按钮" color="purple" />
-        <SuperButton title="另一个按钮" color="green" />
-        <SuperButton title="另一个按钮" color="green" />
+        {buttonConfigs.map((button) => (
+          <SuperButton key={button.id} title={button.title} color={button.color} />
+        ))}
         <p>
           如果数字超过10， 我就很厉害！
         </p>
