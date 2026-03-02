@@ -5,7 +5,7 @@ html, body, #root {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: #ffffff; /* 浅蓝色背景 */
+  background-color: hsl(0, 0%, 100%); /* 浅蓝色背景 */
 }
 
 /* 给标题加个酷炫的效果 */
