@@ -1,30 +1,18 @@
-// import { useState } from 'react'
+import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
+import NewsItemList from './components/news_item_list.tsx'
+import type { NewsItem } from './components/news_item_list.tsx'
 
-type AppProps = {
-  messages: string[]
-}
+type Messages = NewsItem[]
 
-// function SuperButton({ title, color }: { title: string, color: string }) {
-//   const [count, setCount] = useState(0)
-//   return (
-//     <button
-//       onClick={() => setCount(prev => prev + 1)}
-//       style={{ backgroundColor: color, padding: '10px 20px', border: 'none', borderRadius: '5px', color: '#fff', fontSize: '1.2rem', width: '200px', margin: '10px' }}
-//     >
-//       {title} : {count}
-//     </button>
-//   )
-// }
-
-function App({ messages }: AppProps) {
-  // const buttonConfigs = [
-  //   { id: 'super', title: '超级按钮', color: 'purple' },
-  //   { id: 'another-1', title: '另一个按钮', color: 'green' },
-  //   { id: 'another-2', title: '另一个按钮', color: 'green' },
-  // ]
+function App() {
+  const [messages, setMessages] = useState<Messages>([
+    { id: '1', title: '第一条新闻', content: '这是第一条内容' },
+    { id: '2', title: '第二条新闻', content: '这是第二条内容' },
+    { id: '3', title: '第三条新闻', content: '这是第三条内容' },
+  ])
 
   return (
     <div style={{
@@ -42,10 +30,23 @@ function App({ messages }: AppProps) {
       </div>
 
       <div>
-        <h2>从 main.tsx 传入的数据：</h2>
-        {messages.map((item, index) => (
-          <p key={`${item}-${index}`}>{item}</p>
-        ))}
+        <h2>App 中 useState 管理的数据：</h2>
+        <NewsItemList items={messages} />
+        <button
+          onClick={() =>
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: String(prev.length + 1),
+                title: `新增新闻 ${prev.length + 1}`,
+                content: `这是新增的内容 ${prev.length + 1}`,
+              },
+            ])
+          }
+          style={{ marginTop: '12px' }}
+        >
+          添加一条消息
+        </button>
       </div>
 
 
