@@ -2,48 +2,71 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import NoteCard from './components/NoteCard'
 import type { Note } from './components/NoteCard'
+import { supabase } from './lib/supabaseClient'
 
 function App() {
-  const [notes, setNotes] = useState<Note[]>(() => {
-    try {
-      const saved = localStorage.getItem('notes')
-      if (saved) {
-        return JSON.parse(saved)
-      }
-    } catch (error) {
-      console.error('Error parsing notes from localStorage:', error)
-    }
-    return [
-      { id: '1', content: '这是一条示例笔记。长按可以编辑内容，点击右上角 × 可以删除。' },
-      { id: '2', content: '欢迎使用极简笔记应用！每行最多显示 4 张卡片。' },
-      { id: '3', content: '如果内容太长，卡片会自动出现滚动条。' },
-    ]
-  })
-  
+  const [notes, setNotes] = useState<Note[]>([])
+  const [loading, setLoading] = useState(true)
   const [inputValue, setInputValue] = useState('')
   const [editingNote, setEditingNote] = useState<Note | null>(null)
   const [editValue, setEditValue] = useState('')
 
+  // 1. Initial Load from Supabase
   useEffect(() => {
-    try {
-      localStorage.setItem('notes', JSON.stringify(notes))
-    } catch (error) {
-      console.error('Error saving notes to localStorage:', error)
-    }
-  }, [notes])
+    fetchNotes()
 
-  const handleAddNote = () => {
-    if (!inputValue.trim()) return
-    const newNote: Note = {
-      id: Date.now().toString(),
-      content: inputValue,
+    // 2. Setup Realtime Subscription
+    const channel = supabase
+      .channel('public:notes')
+      .on('postgres_changes', { event: '*', table: 'notes' }, () => {
+        fetchNotes()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
     }
-    setNotes([newNote, ...notes])
-    setInputValue('')
+  }, [])
+
+  const fetchNotes = async () => {
+    const { data, error } = await supabase
+      .from('notes')
+      .select('*')
+      .order('created_at', { ascending: false })
+    
+    if (error) {
+      console.error('Error fetching notes:', error)
+    } else if (data) {
+      setNotes(data as Note[])
+    }
+    setLoading(false)
   }
 
-  const handleDeleteNote = (id: string) => {
-    setNotes(notes.filter(note => note.id !== id))
+  const handleAddNote = async () => {
+    if (!inputValue.trim()) return
+    
+    const { error } = await supabase
+      .from('notes')
+      .insert([{ content: inputValue.trim() }])
+
+    if (error) {
+      console.error('Error adding note:', error)
+      alert('添加笔记失败，请检查 Supabase 配置及网络。')
+    } else {
+      setInputValue('')
+    }
+  }
+
+  const handleDeleteNote = async (id: string) => {
+    const { error } = await supabase
+      .from('notes')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.error('Error deleting note:', error)
+      alert('删除失败')
+    }
   }
 
   const handleOpenEdit = (note: Note) => {
@@ -51,18 +74,26 @@ function App() {
     setEditValue(note.content)
   }
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingNote) return
-    setNotes(notes.map(note => 
-      note.id === editingNote.id ? { ...note, content: editValue } : note
-    ))
-    setEditingNote(null)
+    
+    const { error } = await supabase
+      .from('notes')
+      .update({ content: editValue.trim() })
+      .eq('id', editingNote.id)
+
+    if (error) {
+      console.error('Error updating note:', error)
+      alert('保存失败')
+    } else {
+      setEditingNote(null)
+    }
   }
 
   return (
     <div className="app-container">
       <header className="header-section">
-        <h1 style={{ marginBottom: '24px', color: '#1d1d1f' }}>极简笔记</h1>
+        <h1 style={{ marginBottom: '24px', color: '#1d1d1f' }}>极简笔记 (Supabase 版)</h1>
         <div className="input-group">
           <input 
             type="text" 
@@ -70,13 +101,24 @@ function App() {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleAddNote()}
+            disabled={loading}
           />
-          <button className="submit-btn" onClick={handleAddNote}>提交</button>
+          <button 
+            className="submit-btn" 
+            onClick={handleAddNote}
+            disabled={loading}
+          >
+            提交
+          </button>
         </div>
       </header>
 
       <main className="notes-grid">
-        {notes.length === 0 ? (
+        {loading ? (
+          <div style={{ textAlign: 'center', gridColumn: '1 / -1', marginTop: '40px', color: '#86868b' }}>
+            加载中...
+          </div>
+        ) : notes.length === 0 ? (
           <div style={{ textAlign: 'center', gridColumn: '1 / -1', marginTop: '40px', color: '#86868b' }}>
             没有笔记，快去添加一条吧！
           </div>
