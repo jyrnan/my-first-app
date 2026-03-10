@@ -18,7 +18,7 @@ function App() {
     // 2. Setup Realtime Subscription
     const channel = supabase
       .channel('public:notes')
-      .on('postgres_changes', { event: '*', table: 'notes' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notes' }, () => {
         fetchNotes()
       })
       .subscribe()
