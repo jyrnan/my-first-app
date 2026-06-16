@@ -1,0 +1,15 @@
+{
+  "name": "notes-api-worker",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:init:local": "wrangler d1 execute notes-db --local --file=migrations/0001_create_notes.sql",
+    "db:init:remote": "wrangler d1 execute notes-db --remote --file=migrations/0001_create_notes.sql"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250502.0",
+    "typescript": "~5.9.3",
+    "wrangler": "^4.14.0"
+  }
+}

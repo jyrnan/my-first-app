@@ -3,6 +3,7 @@ import React, { useState, useRef } from 'react';
 export type Note = {
   id: string;
   content: string;
+  created_at: string;
 };
 
 interface NoteCardProps {
@@ -12,7 +13,7 @@ interface NoteCardProps {
 }
 
 const NoteCard: React.FC<NoteCardProps> = ({ note, onDelete, onLongPress }) => {
-  const [timer, setTimer] = useState<any>(null);
+  const [timer, setTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const isLongPress = useRef(false);
 
   const handleStart = () => {

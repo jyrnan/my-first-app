@@ -4,13 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host",
+    "dev": "concurrently -n frontend,worker -c blue,green \"vite --host\" \"cd worker && npx wrangler dev\"",
+    "dev:frontend": "vite --host",
+    "dev:worker": "cd worker && npx wrangler dev",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "db:init": "cd worker && npx wrangler d1 execute notes-db --local --file=migrations/0001_create_notes.sql"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.99.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
@@ -20,6 +22,7 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
+    "concurrently": "^9.1.2",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",

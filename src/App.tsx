@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import NoteCard from './components/NoteCard'
 import type { Note } from './components/NoteCard'
-import { supabase } from './lib/supabaseClient'
+import { fetchNotes, createNote, updateNote, deleteNote } from './lib/api'
 
 function App() {
   const [notes, setNotes] = useState<Note[]>([])
@@ -11,60 +11,49 @@ function App() {
   const [editingNote, setEditingNote] = useState<Note | null>(null)
   const [editValue, setEditValue] = useState('')
 
-  // 1. Initial Load from Supabase
+  // 1. Initial Load from Worker API
   useEffect(() => {
-    fetchNotes()
+    loadNotes()
 
-    // 2. Setup Realtime Subscription
-    const channel = supabase
-      .channel('public:notes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notes' }, () => {
-        fetchNotes()
-      })
-      .subscribe()
+    // 2. Polling for cross-tab sync
+    const POLL_INTERVAL = 5000
+    const intervalId = setInterval(() => {
+      loadNotes()
+    }, POLL_INTERVAL)
 
-    return () => {
-      supabase.removeChannel(channel)
-    }
+    return () => clearInterval(intervalId)
   }, [])
 
-  const fetchNotes = async () => {
-    const { data, error } = await supabase
-      .from('notes')
-      .select('*')
-      .order('created_at', { ascending: false })
-    
-    if (error) {
-      console.error('Error fetching notes:', error)
-    } else if (data) {
-      setNotes(data as Note[])
+  const loadNotes = async () => {
+    try {
+      const data = await fetchNotes()
+      setNotes(data)
+    } catch (err) {
+      console.error('Error fetching notes:', err)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const handleAddNote = async () => {
     if (!inputValue.trim()) return
-    
-    const { error } = await supabase
-      .from('notes')
-      .insert([{ content: inputValue.trim() }])
 
-    if (error) {
-      console.error('Error adding note:', error)
-      alert('添加笔记失败，请检查 Supabase 配置及网络。')
-    } else {
+    try {
+      await createNote(inputValue.trim())
       setInputValue('')
+      loadNotes()
+    } catch (err) {
+      console.error('Error adding note:', err)
+      alert('添加笔记失败，请检查网络连接。')
     }
   }
 
   const handleDeleteNote = async (id: string) => {
-    const { error } = await supabase
-      .from('notes')
-      .delete()
-      .eq('id', id)
-
-    if (error) {
-      console.error('Error deleting note:', error)
+    try {
+      await deleteNote(id)
+      loadNotes()
+    } catch (err) {
+      console.error('Error deleting note:', err)
       alert('删除失败')
     }
   }
@@ -76,24 +65,21 @@ function App() {
 
   const handleSaveEdit = async () => {
     if (!editingNote) return
-    
-    const { error } = await supabase
-      .from('notes')
-      .update({ content: editValue.trim() })
-      .eq('id', editingNote.id)
 
-    if (error) {
-      console.error('Error updating note:', error)
-      alert('保存失败')
-    } else {
+    try {
+      await updateNote(editingNote.id, editValue.trim())
       setEditingNote(null)
+      loadNotes()
+    } catch (err) {
+      console.error('Error updating note:', err)
+      alert('保存失败')
     }
   }
 
   return (
     <div className="app-container">
       <header className="header-section">
-        <h1 style={{ marginBottom: '24px', color: '#1d1d1f' }}>极简笔记 (Supabase 版)</h1>
+        <h1 style={{ marginBottom: '24px', color: '#1d1d1f' }}>极简笔记</h1>
         <div className="input-group">
           <input 
             type="text" 
